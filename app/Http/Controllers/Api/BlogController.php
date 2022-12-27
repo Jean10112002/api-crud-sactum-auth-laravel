@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\api;
+use Symfony\Component\HttpFoundation\Response;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -9,10 +10,11 @@ use App\Models\Blog;
 class BlogController extends Controller
 {
     public function create(Request $request){
-        $request->validate([
+        /* $request->validate([
             'title'=>'required',
             'content'=>'required'
-        ]);
+        ]); */
+
         $user_id=auth()->user()->id;
         $blog=new Blog();
         $blog->title=$request->title;
@@ -40,7 +42,7 @@ class BlogController extends Controller
             return response()->json([
                 "status"=>1,
                 "msg"=>$info
-            ],404);
+            ],Response::HTTP_OK);
         }else{
             return response()->json([
                 "status"=>0,
@@ -58,7 +60,7 @@ class BlogController extends Controller
             return response()->json([
                 "status"=>1,
                 "msg"=>"blog actualizado"
-            ]);
+            ],Response::HTTP_OK);
         }else{
             return response()->json([
                 "status"=>0,
@@ -74,7 +76,7 @@ class BlogController extends Controller
             return response()->json([
                 "status"=>1,
                 "msg"=>"blog eliminado"
-            ]);
+            ],Response::HTTP_OK);
         }else{
             return response()->json([
                 "status"=>0,

@@ -11,12 +11,17 @@ Route::post('login', [UserController::class, 'login']);
 
 Route::group( ['middleware' => ["auth:sanctum"]], function(){
     //rutas
-    Route::get('user-profile', [UserController::class, 'userProfile']);
-    Route::get('logout', [UserController::class, 'logout']);
-    Route::post('create-blog', [BlogController::class, 'create']);
-    Route::get('list-blog', [BlogController::class, 'list']);
-    Route::get('show-blog/{id}', [BlogController::class, 'show']);
-    Route::put('update-blog/{id}', [BlogController::class, 'update']);
-    Route::delete('delete-blog/{id}', [BlogController::class, 'delete']);
+    Route::controller(UserController::class)->group(function () {
+        Route::get('user-profile', 'userProfile');
+        Route::post('logout',  'logout');
+    });
+
+    Route::controller(BlogController::class)->group(function () {
+        Route::post('create-blog',  'create');
+        Route::get('list-blog',  'list');
+        Route::get('show-blog/{id}',  'show');
+        Route::put('update-blog/{id}', 'update');
+        Route::delete('delete-blog/{id}',  'delete');
+    });
 });
 

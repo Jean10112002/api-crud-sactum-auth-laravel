@@ -4,71 +4,56 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
+use Symfony\Component\HttpFoundation\Response;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 class UserController extends Controller
 {
     public function register(Request $request){
+      //validación de los datos
         /* $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|confirmed'
+        'name' => 'required',
+        'email' => 'required|email|unique:users',
+        'password' => 'required|confirmed'
         ]); */
-
+        //alta del usuario
         $user = new User();
         $user->name = $request->name;
         $user->email = $request->email;
         $user->password = Hash::make($request->password);
         $user->save();
-
-        return response()->json([
-            "status" => 1,
-            "msg" => "¡Registro de usuario exitoso!",
-        ]);
+        //respuesta
+        /* return response()->json([
+            "message" => "Alta exitosa"
+        ]); */
+        return response($user, Response::HTTP_CREATED);
 
     }
     public function login(Request $request){
-        $request->validate([
-            "email"=>'required|email',
-            "password"=>'required',
+         $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required']
         ]);
-        $user=User::where("email","=",$request->email)->first();
-        if( isset($user->id)){
-            if(Hash::check($request->password,$user->password)){
-                $token=$user->createToken("auth-token")->plainTextToken;
-                return response()->json([
-                    "status"=>1,
-                    "msg"=>"usuario logeado",
-                    "access-token"=>$token
-                ]);
-            }else{
-                return response()->json([
-                    "status"=>0,
-                    "msg"=>"credenciales incorrectas"
-                ]);
-            }
-        }else{
-            return response()->json([
-                "status"=>0,
-                "msg"=>"usuario no registrado"
-            ],404);
+
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            $token = $user->createToken('token')->plainTextToken;
+            $cookie = cookie('cookie_token', $token, 60 * 24);
+            return response(["token"=>$token], Response::HTTP_OK)->withoutCookie($cookie);
+        } else {
+            return response(["message"=> "Credenciales inválidas"],Response::HTTP_UNAUTHORIZED);
         }
     }
     public function userProfile(){
         return response()->json([
-            "status" => 0,
-            "msg" => "Acerca del perfil de usuario",
-            "data" => auth()->user()
-        ]);
+            "message" => "userProfile OK",
+            "userData" => auth()->user()
+        ], Response::HTTP_OK);
     }
     public function logout(){
-        auth()->user()->tokens()->delete();
-
-        return response()->json([
-            "status" => 1,
-            "msg" => "Cierre de Sesión",
-        ]);
+        $cookie = Cookie::forget('cookie_token');
+        return response(["message"=>"Cierre de sesión OK"], Response::HTTP_OK)->withCookie($cookie);
     }
 }
